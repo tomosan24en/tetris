@@ -364,6 +364,9 @@ class PlayScreen {
     }
 
     draw() {
+        if (!playing) {
+            return;
+        }
         clearScreen();
         this.field.draw();
         this.mino.draw();
