@@ -279,7 +279,7 @@ function clearScreen() {
     context.fillRect(FIELD_WIDTH, 0, ALL_WIDTH, HEIGHT);
 }
 
-class Game {
+class PlayScreen {
     constructor(width, height, canvas) {
         this.width = width;
         this.height = height;
@@ -374,18 +374,37 @@ class Game {
     }
 }
 
-clearScreen();
+function drawTitleScreen() {
+    context.font = "20px sans-serif";
+    context.fillStyle = "white";
+    context.fillText("Press [ Space ] to start.", 50, 400);
+}
 
-let game = new Game(WIDTH_BLOCKS, HEIGHT_BLOCKS, canvas);
+clearScreen();
+drawTitleScreen();
+
+let game = new PlayScreen(WIDTH_BLOCKS, HEIGHT_BLOCKS, canvas);
 
 let playing = false;
 
 function play() {
-    if (playing) {
-        game.stop();
-        console.log("stopped");
-    } else {
+    if (!playing) {
         game.start();
         console.log("started");
+        playing = true;
     }
 }
+
+function drawTitleListener(e) {
+    if (e.code == "Space") {
+        play();
+    }
+}
+
+function init() {
+    clearScreen();
+    drawTitleScreen();
+    document.body.addEventListener("keydown", drawTitleListener);
+}
+
+init();
