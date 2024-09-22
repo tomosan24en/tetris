@@ -299,6 +299,9 @@ class PlayScreen {
     stop() {
         document.body.removeEventListener("keydown", this.bindedKeyEventListener);
         clearInterval(this.loopId);
+        clearScreen();
+        drawGameOverScreen();
+        playing = false;
     }
 
     keydown(e) {
@@ -352,6 +355,9 @@ class PlayScreen {
             this.mino.fix(this.field);
             this.field.clear();
             this.mino = this.generateMino();
+            if (this.mino.isHit(this.field)) {
+                this.stop();
+            }
         } else {
             this.mino = newMino;
         }
@@ -377,7 +383,14 @@ class PlayScreen {
 function drawTitleScreen() {
     context.font = "20px sans-serif";
     context.fillStyle = "white";
-    context.fillText("Press [ Space ] to start.", 50, 400);
+    context.fillText("Press [ S ] to start.", 50, 400);
+}
+
+function drawGameOverScreen() {
+    context.font = "20px sans-serif";
+    context.fillStyle = "white";
+    context.fillText("GAME OVER", 50, 400);
+    context.fillText("Press [ S ] to restart.", 50, 430);
 }
 
 clearScreen();
@@ -396,7 +409,7 @@ function play() {
 }
 
 function drawTitleListener(e) {
-    if (e.code == "Space") {
+    if (e.code == "KeyS") {
         play();
     }
 }
