@@ -5,7 +5,7 @@ const context = canvas.getContext("2d");
 
 const FIELD_WIDTH = 415;
 const HEIGHT = 815;
-const ALL_WIDTH = 800;
+const ALL_WIDTH = 615;
 
 const WIDTH_BLOCKS = 8;
 const HEIGHT_BLOCKS = 16;
@@ -27,14 +27,18 @@ function drawTile(x, y, color) {
 }
 
 class Block {
+    #x;
+    #y;
+    #color;
+
     constructor(x, y, color) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
+        this.#x = x;
+        this.#y = y;
+        this.#color = color;
     }
 
     draw() {
-        drawTile(this.x, this.y, this.color);
+        drawTile(this.#x, this.#y, this.#color);
     }
 
     isFilled() {
@@ -42,7 +46,7 @@ class Block {
     }
 
     sameColor(x, y) {
-        return new Block(x, y, this.color);
+        return new Block(x, y, this.#color);
     }
 }
 
@@ -75,46 +79,50 @@ const BLANK = new BlankBlock();
 const WALL = new WallBlock();
 
 class Field {
+    #width;
+    #height;
+    #blocks;
+
     constructor(width, height) {
-        this.width = width;
-        this.height = height;
-        this.blocks = [];
-        for(let x = 0; x < this.width; x++) {
-            this.blocks.push([]);
-            for(let y = 0; y < this.height; y++) {
-                this.blocks[x].push(BLANK);
+        this.#width = width;
+        this.#height = height;
+        this.#blocks = [];
+        for(let x = 0; x < this.#width; x++) {
+            this.#blocks.push([]);
+            for(let y = 0; y < this.#height; y++) {
+                this.#blocks[x].push(BLANK);
             }
         }
     }
 
     draw() {
-        for(let x = 0; x < this.width; x++) {
-            for(let y = 0; y < this.height; y++) {
-                if (this.blocks[x][y].isFilled()) {
-                    this.blocks[x][y].draw();
+        for(let x = 0; x < this.#width; x++) {
+            for(let y = 0; y < this.#height; y++) {
+                if (this.#blocks[x][y].isFilled()) {
+                    this.#blocks[x][y].draw();
                 }
             }
         }
     }
 
     getTileAt(x, y) {
-        if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+        if (x < 0 || x >= this.#width || y < 0 || y >= this.#height) {
             return WALL;
         }
-        return this.blocks[x][y];
+        return this.#blocks[x][y];
     }
 
     setTile(x, y, newTile) {
-        if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+        if (x < 0 || x >= this.#width || y < 0 || y >= this.#height) {
             throw new RangeError();
         }
-        this.blocks[x][y] = newTile;
+        this.#blocks[x][y] = newTile;
     }
 
     isClearableAtRow(y) {
         let clearable = true;
-        for (let x = 0; x < this.width; x++) {
-            if (!this.blocks[x][y].isFilled()) {
+        for (let x = 0; x < this.#width; x++) {
+            if (!this.#blocks[x][y].isFilled()) {
                 clearable = false;
                 break;
             }
@@ -124,24 +132,26 @@ class Field {
 
     clear() {
         let drop = 0;
-        for (let y = this.height - 1; y >= 0; y--) {
+        for (let y = this.#height - 1; y >= 0; y--) {
             if (this.isClearableAtRow(y)) {
                 drop++;
             } else {
-                for (let x = 0 ; x < this.width; x++) {
-                    if (this.blocks[x][y].isFilled()) {
-                        this.blocks[x][y + drop] = this.blocks[x][y].sameColor(x, y + drop);
+                for (let x = 0 ; x < this.#width; x++) {
+                    if (this.#blocks[x][y].isFilled()) {
+                        this.#blocks[x][y + drop] = this.#blocks[x][y].sameColor(x, y + drop);
                     } else {
-                        this.blocks[x][y + drop] = BLANK;
+                        this.#blocks[x][y + drop] = BLANK;
                     }
                 }
             }
         }
         for (let y = 0; y < drop; y++) {
-            for (let x = 0 ; x < this.width; x++) {
-                this.blocks[x][y] = BLANK;
+            for (let x = 0 ; x < this.#width; x++) {
+                this.#blocks[x][y] = BLANK;
             }
         }
+        return drop;
+        // 消した列の数が最終的に落とす距離
     }
 }
 
@@ -212,24 +222,31 @@ const SHAPES = [
 ];
 
 class Mino {
+    x;
+    y;
+    #shapeIndex;
+    #shape;
+    rotation;
+    #color;
+
     constructor(x, y, shape, rotation) {
         this.x = x;
         this.y = y;
-        this.shapeIndex = shape;
-        this.shape = SHAPES[this.shapeIndex].blocks;
+        this.#shapeIndex = shape;
+        this.#shape = SHAPES[this.#shapeIndex].blocks;
         this.rotation = rotation;
-        this.color = SHAPES[this.shapeIndex].color;
-        console.log("new mino : " + SHAPES[this.shapeIndex].color);
+        this.#color = SHAPES[this.#shapeIndex].color;
+        console.log("new mino : " + SHAPES[this.#shapeIndex].color);
     }
 
     copy() {
-        return new Mino(this.x, this.y, this.shapeIndex, this.rotation);
+        return new Mino(this.x, this.y, this.#shapeIndex, this.rotation);
     }
 
     #forEachBlock(func) {
-        for (let xp = 0; xp < this.shape.length; xp++) {
-            for (let yp = 0; yp < this.shape[xp].length; yp++) {
-                const block = this.shape[xp][yp];
+        for (let xp = 0; xp < this.#shape.length; xp++) {
+            for (let yp = 0; yp < this.#shape[xp].length; yp++) {
+                const block = this.#shape[xp][yp];
                 if (block == 0) {
                     continue;
                 }
@@ -249,7 +266,7 @@ class Mino {
 
     draw() {
         this.#forEachBlock(function (x, y) {
-            drawTile(x, y, this.color);
+            drawTile(x, y, this.#color);
         }.bind(this));
     }
 
@@ -267,7 +284,7 @@ class Mino {
     // isHitがfalseの時に呼び出してね
     fix(field) {
         this.#forEachBlock(function (x, y) {
-            field.setTile(x, y, new Block(x, y, this.color));
+            field.setTile(x, y, new Block(x, y, this.#color));
         }.bind(this));
     }
 }
@@ -280,27 +297,38 @@ function clearScreen() {
 }
 
 class PlayScreen {
+    #width;
+    #height;
+    #canvas;
+    #bindedKeyEventListener;
+    #frameCount;
+    #field;
+    #mino;
+    #loopId;
+    #score;
+
     constructor(width, height, canvas) {
-        this.width = width;
-        this.height = height;
-        this.canvas = canvas;
-        this.bindedKeyEventListener = this.keydown.bind(this);
+        this.#width = width;
+        this.#height = height;
+        this.#canvas = canvas;
+        this.#bindedKeyEventListener = this.keydown.bind(this);
     }
 
     start() {
-        this.frameCount = 0;
-        this.field = new Field(this.width, this.height);
-        this.mino = this.generateMino();
-        document.body.addEventListener("keydown", this.bindedKeyEventListener);
-        this.loopId = setInterval(this.loop.bind(this), 20);
+        this.#frameCount = 0;
+        this.#field = new Field(this.#width, this.#height);
+        this.#mino = this.generateMino();
+        document.body.addEventListener("keydown", this.#bindedKeyEventListener);
+        this.#loopId = setInterval(this.loop.bind(this), 20);
         this.draw();
+        this.#score = 0;
     }
 
     stop() {
-        document.body.removeEventListener("keydown", this.bindedKeyEventListener);
-        clearInterval(this.loopId);
+        document.body.removeEventListener("keydown", this.#bindedKeyEventListener);
+        clearInterval(this.#loopId);
         clearScreen();
-        drawGameOverScreen();
+        drawGameOverScreen(this.#score);
         playing = false;
     }
 
@@ -333,33 +361,34 @@ class PlayScreen {
     }
 
     translateMino(vx) {
-        const newMino = this.mino.copy();
+        const newMino = this.#mino.copy();
         newMino.x += vx;
-        if (!newMino.isHit(this.field)) {
-            this.mino = newMino;
+        if (!newMino.isHit(this.#field)) {
+            this.#mino = newMino;
         }
     }
 
     rotateMino(dRotation) {
-        const newMino = this.mino.copy();
+        const newMino = this.#mino.copy();
         newMino.rotation += dRotation;
-        if (!newMino.isHit(this.field)) {
-            this.mino = newMino;
+        if (!newMino.isHit(this.#field)) {
+            this.#mino = newMino;
         }
     }
 
     dropMino(vy) {
-        const newMino = this.mino.copy();
+        const newMino = this.#mino.copy();
         newMino.y += vy;
-        if (newMino.isHit(this.field)) {
-            this.mino.fix(this.field);
-            this.field.clear();
-            this.mino = this.generateMino();
-            if (this.mino.isHit(this.field)) {
+        if (newMino.isHit(this.#field)) {
+            this.#mino.fix(this.#field);
+            const erasedRows = this.#field.clear();
+            this.#score += erasedRows * 1000;
+            this.#mino = this.generateMino();
+            if (this.#mino.isHit(this.#field)) {
                 this.stop();
             }
         } else {
-            this.mino = newMino;
+            this.#mino = newMino;
         }
     }
 
@@ -368,15 +397,21 @@ class PlayScreen {
             return;
         }
         clearScreen();
-        this.field.draw();
-        this.mino.draw();
+        this.#field.draw();
+        this.#mino.draw();
+        this.#drawScore();
+    }
+
+    #drawScore() {
+        context.fillStyle = "black";
+        context.fillText(`Score : ${this.#score}`, 430, 30);
     }
 
     loop() {
         // console.log(`loop (framecount : ${this.frameCount})`);
-        this.frameCount++;
-        if (this.frameCount >= 50) {
-            this.frameCount = 0;
+        this.#frameCount++;
+        if (this.#frameCount >= 50) {
+            this.#frameCount = 0;
             this.dropMino(1);
         }
         this.draw();
@@ -389,11 +424,12 @@ function drawTitleScreen() {
     context.fillText("Press [ S ] to start.", 50, 400);
 }
 
-function drawGameOverScreen() {
+function drawGameOverScreen(score) {
     context.font = "20px sans-serif";
     context.fillStyle = "white";
     context.fillText("GAME OVER", 50, 400);
-    context.fillText("Press [ S ] to restart.", 50, 430);
+    context.fillText(`Score : ${score}`, 50, 430);
+    context.fillText("Press [ S ] to restart.", 50, 460);
 }
 
 clearScreen();
